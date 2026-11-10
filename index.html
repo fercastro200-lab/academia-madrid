@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Academia Madrid</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Cancha dura: azul de cancha + amarillo de pelota. Una columna, pestañas fijas abajo. */
+  --bg: #edf1f6;
+  --surface: #ffffff;
+  --surface-2: #f5f7fa;
+  --ink: #13233a;
+  --muted: #5a6a7f;
+  --line: #d6dee8;
+  --court: #1c4d8f;
+  --court-2: #163f76;
+  --on-court: #ffffff;
+  --ball: #d9f24b;
+  --on-ball: #1b2604;
+  --good: #1d8155;
+  --good-bg: #e2f4ea;
+  --warn: #a35f00;
+  --warn-bg: #fdf0da;
+  --bad: #b93326;
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1520; --surface: #151f2d; --surface-2: #1b2738; --ink: #e6edf6; --muted: #98a8bc;
+    --line: #2a384b; --court: #1d4a85; --court-2: #173b6b; --on-court: #ffffff; --ball: #d4ee48;
+    --on-ball: #1b2604; --good: #4fc28b; --good-bg: #16352a; --warn: #f0b155; --warn-bg: #3a2c14; --bad: #ff7b6b;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1520; --surface: #151f2d; --surface-2: #1b2738; --ink: #e6edf6; --muted: #98a8bc;
+  --line: #2a384b; --court: #1d4a85; --court-2: #173b6b; --on-court: #ffffff; --ball: #d4ee48;
+  --on-ball: #1b2604; --good: #4fc28b; --good-bg: #16352a; --warn: #f0b155; --warn-bg: #3a2c14; --bad: #ff7b6b;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.45;
+  -webkit-text-size-adjust: 100%;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+h1, h2, h3 { font-family: var(--display); font-weight: 700; letter-spacing: .01em; margin: 0; text-wrap: balance; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* Header with court lines */
+.court {
+  position: relative; background: var(--court); color: var(--on-court);
+  padding: 18px 16px 16px; overflow: hidden;
+}
+.court::before {
+  content: ""; position: absolute; inset: 10px 10px -40px 10px;
+  border: 2px solid rgba(255,255,255,.28); pointer-events: none;
+}
+.court::after {
+  content: ""; position: absolute; top: 10px; bottom: 0; left: 50%; width: 2px;
+  background: rgba(255,255,255,.18); pointer-events: none;
+}
+.court-inner { position: relative; z-index: 1; max-width: 640px; margin: 0 auto; display: grid; gap: 10px; }
+.court h1 { font-size: 30px; line-height: 1; display: flex; align-items: center; gap: 10px; }
+.ballmark { width: 18px; height: 18px; border-radius: 50%; background: var(--ball); box-shadow: inset -3px -2px 0 rgba(0,0,0,.12); flex: none; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px;
+  background: rgba(255,255,255,.14); color: var(--on-court); font-size: 14px; font-weight: 500;
+}
+.chip b { font-weight: 600; }
+.chip-ball { background: var(--ball); color: var(--on-ball); }
+.chip-warn { background: #ffd89a; color: #3d2600; }
+
+main { max-width: 640px; margin: 0 auto; padding: 16px 16px calc(96px + env(safe-area-inset-bottom)); display: grid; gap: 16px; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 12px; }
+.card-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.card-h h2 { font-size: 22px; }
+.sub { color: var(--muted); font-size: 14px; }
+.section-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.section-h h2 { font-size: 22px; }
+
+/* Buttons */
+.btn {
+  appearance: none; border: 1px solid transparent; border-radius: 10px; padding: 10px 14px; min-height: 44px;
+  font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  background: var(--court); color: var(--on-court);
+}
+.btn:hover { background: var(--court-2); }
+.btn.ball { background: var(--ball); color: var(--on-ball); }
+.btn.ball:hover { filter: brightness(.96); }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn.ghost:hover { background: var(--surface-2); }
+.btn.danger { background: transparent; color: var(--bad); border-color: var(--line); }
+.btn.sm { min-height: 36px; padding: 6px 10px; font-size: 14px; border-radius: 8px; }
+.btn[disabled] { opacity: .45; cursor: not-allowed; }
+.btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn-row .grow { flex: 1 1 auto; }
+:focus-visible { outline: 3px solid var(--ball); outline-offset: 2px; }
+.iconbtn {
+  appearance: none; border: 1px solid var(--line); background: var(--surface); width: 44px; height: 44px; border-radius: 10px;
+  font-size: 22px; line-height: 1; cursor: pointer; display: grid; place-items: center; color: var(--ink);
+}
+.iconbtn:hover { background: var(--surface-2); }
+
+/* Week bar */
+.weekbar { display: grid; grid-template-columns: 44px 1fr 44px; gap: 8px; align-items: center; }
+.weekbar .mid { text-align: center; display: grid; gap: 2px; justify-items: center; }
+.weekbar .mid .lbl { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.weekbar .mid .rng { font-family: var(--display); font-weight: 700; font-size: 24px; line-height: 1.1; }
+.linkbtn { appearance: none; border: 0; background: none; color: var(--court); font-weight: 600; cursor: pointer; padding: 4px; font-size: 14px; text-decoration: underline; }
+:root[data-theme="dark"] .linkbtn { color: var(--ball); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .linkbtn { color: var(--ball); } }
+
+.pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.pill.open { background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); }
+.pill.closed { background: var(--court); color: var(--on-court); }
+.pill.good { background: var(--good-bg); color: var(--good); }
+.pill.warn { background: var(--warn-bg); color: var(--warn); }
+
+/* Player rows in summary */
+.rows { display: grid; }
+.prow { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 12px 0; border-top: 1px solid var(--line); }
+.prow:first-child { border-top: 0; padding-top: 4px; }
+.prow .nm { font-weight: 600; }
+.prow .days { color: var(--muted); font-size: 14px; }
+.prow .amt { font-family: var(--display); font-weight: 700; font-size: 22px; text-align: right; line-height: 1.1; }
+.prow .hr { color: var(--muted); font-size: 14px; text-align: right; }
+.prow .acts { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.prow.paid .amt { color: var(--good); }
+.paybtn.is-paid { background: var(--good-bg); color: var(--good); border-color: transparent; }
+
+.totals { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding-top: 12px; border-top: 2px solid var(--ink); }
+.totals .big { font-family: var(--display); font-weight: 700; font-size: 26px; text-align: right; line-height: 1.1; }
+.totals .k { color: var(--muted); font-size: 14px; }
+.totals .v { text-align: right; font-size: 14px; }
+
+/* Games list */
+.games { display: grid; gap: 8px; }
+.game {
+  display: grid; grid-template-columns: 52px 1fr auto; gap: 12px; align-items: center;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; cursor: pointer; text-align: left; width: 100%;
+}
+.game:hover { border-color: var(--court); }
+.game.locked { cursor: default; }
+.game.locked:hover { border-color: var(--line); }
+.gdate { background: var(--court); color: var(--on-court); border-radius: 8px; text-align: center; padding: 4px 0; line-height: 1; }
+.gdate .wd { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; opacity: .85; display: block; }
+.gdate .dn { font-family: var(--display); font-weight: 700; font-size: 24px; display: block; margin-top: 2px; }
+.gmeta { font-size: 14px; color: var(--muted); }
+.gplayers { font-weight: 500; }
+.gamt { font-family: var(--display); font-weight: 700; font-size: 20px; }
+.empty { color: var(--muted); text-align: center; padding: 16px 8px; border: 1px dashed var(--line); border-radius: 12px; }
+
+/* Lists (players, packages) */
+.list { display: grid; }
+.li { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); }
+.li:first-child { border-top: 0; }
+.li .t { font-weight: 600; }
+.li .s { color: var(--muted); font-size: 14px; }
+.li .acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+
+/* Forms */
+.field { display: grid; gap: 6px; }
+.field label, .lbl-sm { font-size: 14px; font-weight: 600; }
+.input, select.input, textarea.input {
+  width: 100%; min-height: 44px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+}
+.input:focus { outline: 2px solid var(--court); outline-offset: 0; border-color: var(--court); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+@media (max-width: 420px) { .grid3 { grid-template-columns: 1fr 1fr; } .grid3 > :last-child { grid-column: 1 / -1; } }
+.inline { display: flex; gap: 8px; }
+.inline .input { flex: 1; }
+.radio { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; }
+.radio input { margin-top: 4px; accent-color: var(--court); }
+.radio .s { color: var(--muted); font-size: 14px; display: block; }
+.check { display: flex; gap: 8px; align-items: center; font-size: 15px; }
+.check input { width: 18px; height: 18px; accent-color: var(--court); }
+.note { font-size: 14px; color: var(--muted); }
+.hint-box { background: var(--surface-2); border-radius: 10px; padding: 10px 12px; font-size: 14px; color: var(--muted); }
+
+/* Per-person hour rows in session form */
+.pick { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 10px; }
+.pick + .pick { margin-top: 4px; }
+.pick .pname { color: var(--muted); font-weight: 500; }
+.pick.on { background: var(--surface-2); }
+.pick.on .pname { color: var(--ink); font-weight: 600; }
+.stepper { display: flex; align-items: center; gap: 4px; }
+.stp {
+  appearance: none; width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface);
+  color: var(--ink); font-size: 22px; line-height: 1; cursor: pointer; display: grid; place-items: center;
+}
+.stp:hover { border-color: var(--court); }
+.pick .ph { width: 64px; min-height: 40px; padding: 6px; text-align: center; font-weight: 600; }
+.quick { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 14px; color: var(--muted); }
+.quick button {
+  appearance: none; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px;
+  padding: 4px 12px; min-height: 32px; font-weight: 600; font-size: 14px; cursor: pointer;
+}
+.quick button:hover { border-color: var(--court); }
+.court-auto { font-size: 13px; color: var(--muted); }
+.pick .pname { appearance: none; border: 0; background: none; padding: 6px 0; text-align: left; cursor: pointer; font-size: 16px; }
+.pick[hidden] { display: none; }
+.selected { display: flex; flex-wrap: wrap; gap: 6px; min-height: 28px; align-items: center; }
+.selchip { display: inline-flex; gap: 6px; align-items: center; background: var(--court); color: var(--on-court); border-radius: 999px; padding: 3px 10px; font-size: 14px; }
+.breakdown { grid-column: 1 / -1; background: var(--surface-2); border-radius: 10px; padding: 8px 12px; display: grid; gap: 4px; font-size: 14px; }
+.breakdown .r { display: flex; justify-content: space-between; gap: 12px; }
+.payday { padding: 10px 0; border-top: 1px solid var(--line); }
+.payday:first-child { border-top: 0; }
+.addp { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; }
+@media (max-width: 480px) { .addp { grid-template-columns: 1fr 1fr; } .addp .btn { grid-column: 1 / -1; } }
+a.btn { text-decoration: none; }
+.btn.wa { background: #1f9d55; color: #fff; }
+.btn.wa:hover { background: #18834a; }
+@media (max-width: 480px) { .li { grid-template-columns: 1fr; } .li .acts { justify-content: flex-start; } }
+.big-add { width: 100%; min-height: 56px; font-size: 18px; border-radius: 14px; }
+
+/* Ledger */
+.led { display: grid; grid-template-columns: 52px 1fr auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.led:first-child { border-top: 0; }
+.led .gdate.buy { background: var(--ball); color: var(--on-ball); }
+.led .what { font-weight: 500; }
+.led .who { color: var(--muted); font-size: 14px; }
+.led .d { text-align: right; font-family: var(--display); font-weight: 700; font-size: 20px; line-height: 1.1; }
+.led .d.plus { color: var(--good); }
+.led .bal { text-align: right; color: var(--muted); font-size: 13px; }
+.pkg { display: grid; gap: 8px; padding: 12px 0; border-top: 1px solid var(--line); }
+.pkg:first-child { border-top: 0; padding-top: 4px; }
+.pkg .top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+.pkg .bar > span.done { background: var(--muted); }
+.preview { background: var(--surface-2); border-radius: 10px; padding: 10px 12px; display: grid; gap: 4px; font-size: 14px; }
+.preview .r { display: flex; justify-content: space-between; gap: 12px; }
+.preview .r.tot { font-weight: 600; border-top: 1px solid var(--line); padding-top: 6px; margin-top: 2px; }
+
+/* Progress */
+.bar { height: 10px; background: var(--surface-2); border-radius: 999px; overflow: hidden; border: 1px solid var(--line); }
+.bar > span { display: block; height: 100%; background: var(--court); border-radius: 999px; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stat { display: grid; gap: 2px; }
+.stat .k { font-size: 13px; color: var(--muted); }
+.stat .v { font-family: var(--display); font-weight: 700; font-size: 26px; line-height: 1.1; }
+
+/* Steps for empty state */
+.steps { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; counter-reset: s; }
+.steps li { display: grid; grid-template-columns: 32px 1fr; gap: 10px; align-items: start; counter-increment: s; }
+.steps li::before {
+  content: counter(s); width: 32px; height: 32px; border-radius: 50%; background: var(--ball); color: var(--on-ball);
+  display: grid; place-items: center; font-family: var(--display); font-weight: 700; font-size: 18px;
+}
+.steps li.done::before { content: "✓"; background: var(--good-bg); color: var(--good); }
+
+/* Bottom nav */
+nav.tabs[hidden] { display: none; }
+nav.tabs {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--surface); border-top: 1px solid var(--line);
+  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+}
+nav.tabs .in { max-width: 640px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; }
+nav.tabs button {
+  appearance: none; border: 0; background: none; padding: 8px 4px; border-radius: 10px; cursor: pointer; color: var(--muted);
+  font-weight: 600; font-size: 13px; display: grid; justify-items: center; gap: 2px;
+}
+nav.tabs button svg { width: 22px; height: 22px; }
+nav.tabs button[aria-current="page"] { color: var(--court); background: var(--surface-2); }
+:root[data-theme="dark"] nav.tabs button[aria-current="page"] { color: var(--ball); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) nav.tabs button[aria-current="page"] { color: var(--ball); } }
+
+/* Sheet (modal) */
+.backdrop { position: fixed; inset: 0; background: rgba(8,16,28,.55); z-index: 40; display: grid; align-items: end; justify-items: center; }
+.backdrop[hidden] { display: none; }
+.sheet {
+  background: var(--surface); color: var(--ink); width: 100%; max-width: 560px; max-height: 92%; overflow: auto;
+  border-radius: 18px 18px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); display: grid; gap: 14px;
+}
+@media (min-width: 600px) { .backdrop { align-items: center; } .sheet { border-radius: 18px; } }
+.sheet h2 { font-size: 24px; }
+.sheet .err { color: var(--bad); font-size: 14px; font-weight: 600; }
+
+/* Toast + banners */
+.toast {
+  position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 60;
+  background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-weight: 500; max-width: calc(100% - 32px);
+  box-shadow: 0 6px 24px rgba(0,0,0,.2);
+}
+.toast[hidden] { display: none; }
+.banner { background: var(--warn-bg); color: var(--warn); border-radius: 10px; padding: 10px 12px; font-size: 14px; font-weight: 500; }
+.loading { color: var(--muted); text-align: center; padding: 40px 0; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .sheet { animation: up .18s ease-out; }
+  @keyframes up { from { transform: translateY(16px); opacity: .6; } to { transform: none; opacity: 1; } }
+}
+</style>
+</head>
+<body>
+<header class="court">
+  <div class="court-inner">
+    <h1><span class="ballmark" aria-hidden="true"></span>Academia Madrid</h1>
+    <div class="chips" id="chips"></div>
+  </div>
+</header>
+
+<main id="main"><div class="loading">Cargando…</div></main>
+
+<nav class="tabs" aria-label="Secciones" hidden>
+  <div class="in">
+    <button type="button" data-action="tab" data-tab="partidos" aria-current="page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6c3 2.6 3 10.2 0 12.8M18.4 5.6c-3 2.6-3 10.2 0 12.8"/></svg>
+      Partidos
+    </button>
+    <button type="button" data-action="tab" data-tab="cobros">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg>
+      Cobros
+    </button>
+    <button type="button" data-action="tab" data-tab="jugadores">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M16.5 14.6c2.6.2 4.4 2 5 4.9"/></svg>
+      Jugadores
+    </button>
+    <button type="button" data-action="tab" data-tab="paquetes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>
+      Horas
+    </button>
+    <button type="button" data-action="tab" data-tab="ajustes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/><circle cx="12" cy="12" r="4"/></svg>
+      Precio
+    </button>
+  </div>
+</nav>
+
+<div class="backdrop" id="backdrop" hidden>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title"></div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script type="module">
+/* ---------- Firebase ---------- */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc as fdoc, collection as fcol, onSnapshot as fsnap, getDoc, setDoc, updateDoc, deleteDoc, addDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDNoktank9HqnBRjjMU3_yjf6CywA3TgpQ",
+  authDomain: "academia-madrid.firebaseapp.com",
+  projectId: "academia-madrid",
+  storageBucket: "academia-madrid.firebasestorage.app",
+  messagingSenderId: "233431670897",
+  appId: "1:233431670897:web:bd1eb79efc044836edfbd0"
+};
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+let fs;
+try { fs = initializeFirestore(fbApp, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); }
+catch (e) { fs = initializeFirestore(fbApp, {}); }
+
+/* Small wrapper so the app talks to Firestore with the same calls it used before. */
+const wrapSnap = s => ({ id: s.id, exists: s.exists(), data: () => s.data(), metadata: { fromCache: s.metadata.fromCache, hasPendingWrites: s.metadata.hasPendingWrites } });
+const wrapDoc = ref => ({
+  id: ref.id, path: ref.path,
+  get: async () => wrapSnap(await getDoc(ref)),
+  set: d => setDoc(ref, d), update: d => updateDoc(ref, d), delete: () => deleteDoc(ref),
+  onSnapshot: (n, e) => fsnap(ref, { includeMetadataChanges: true }, s => n(wrapSnap(s)), e)
+});
+const wrapCol = ref => ({
+  path: ref.path,
+  doc: id => wrapDoc(id ? fdoc(ref, id) : fdoc(ref)),
+  add: async d => wrapDoc(await addDoc(ref, d)),
+  onSnapshot: (n, e) => fsnap(ref, { includeMetadataChanges: true }, q => n({ docs: q.docs.map(wrapSnap), size: q.size, empty: q.empty, metadata: { fromCache: q.metadata.fromCache } }), e)
+});
+const fsDb = { doc: p => wrapDoc(fdoc(fs, p)), collection: p => wrapCol(fcol(fs, p)) };
+
+/* Data brought over from the first version (in Claude). Imported once, on request. */
+const SEED = {"config": {"main": {"capAmount": 10, "capHours": 3, "capOn": true, "mode": "perPerson", "pricePerHour": 4}}, "players": {"00wmyowk6dpdx20j06b0": {"active": true, "createdAt": "2026-11-09T18:55:42.340Z", "name": "Robert"}, "f99honj33nzfs5gmsl3q": {"active": true, "createdAt": "2026-11-09T18:55:49.558Z", "name": "Fernando"}, "lkb420x07lbd69me2fj2": {"active": true, "createdAt": "2026-11-09T18:55:53.194Z", "name": "Gerardo"}, "mj5p8z2k669pjpaeohxk": {"active": true, "createdAt": "2026-11-09T18:55:56.058Z", "name": "Rodo"}}, "sessions": {"lkkhf2s4l37vdi6aaz51": {"capAmount": 10, "capHours": 3, "capOn": true, "courtHours": 1.5, "createdAt": "2026-11-09T19:14:49.851Z", "date": "2026-11-09", "mode": "perPerson", "note": "", "players": {"00wmyowk6dpdx20j06b0": 1.5, "f99honj33nzfs5gmsl3q": 1.5, "lkb420x07lbd69me2fj2": 1.5, "mj5p8z2k669pjpaeohxk": 1.5}, "pricePerHour": 4, "updatedAt": "2026-11-09T19:14:49.851Z"}}};
+
+/* ---------- helpers ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const r2 = n => Math.round((Number(n) || 0) * 100) / 100;
+const money = n => "$" + r2(n).toFixed(2);
+const hrs = n => r2(n) + " h";
+const num = v => { const x = parseFloat(String(v ?? "").replace(",", ".")); return isFinite(x) ? x : 0; };
+const pad = n => String(n).padStart(2, "0");
+const toISO = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const fromISO = s => { const [y, m, d] = String(s).split("-").map(Number); return new Date(y, (m || 1) - 1, d || 1); };
+const addDays = (s, n) => { const d = fromISO(s); d.setDate(d.getDate() + n); return toISO(d); };
+const mondayOf = s => { const d = fromISO(s); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return toISO(d); };
+const today = () => toISO(new Date());
+const WD = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
+const WDL = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+const MOL = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+const MO = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+const fmtDay = s => { const d = fromISO(s); return `${WD[d.getDay()]} ${d.getDate()}`; };
+const fmtDate = s => { const d = fromISO(s); return `${d.getDate()} ${MO[d.getMonth()]} ${d.getFullYear()}`; };
+const fmtRange = ws => {
+  const a = fromISO(ws), b = fromISO(addDays(ws, 6));
+  return a.getMonth() === b.getMonth()
+    ? `${a.getDate()} – ${b.getDate()} ${MO[b.getMonth()]}`
+    : `${a.getDate()} ${MO[a.getMonth()]} – ${b.getDate()} ${MO[b.getMonth()]}`;
+};
+const dayList = (l, sep) => (l.days || []).map(d => fmtDay(d) + ((l.fixedDays || []).includes(d) ? " (tarifa fija)" : "")).join(sep);
+/* Phones: digits only; an 8-digit number is taken as El Salvador (+503). */
+const normPhone = v => { const d = String(v || "").replace(/\D/g, ""); return d.length === 8 ? "503" + d : d; };
+const fmtPhone = d => (d && d.length === 11 && d.startsWith("503")) ? `+503 ${d.slice(3, 7)} ${d.slice(7)}` : (d ? "+" + d : "");
+const phoneOk = d => !d || (d.length >= 10 && d.length <= 15);
+const waLink = (phone, text) => `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+const MODE_LABEL = { split: "costo dividido", perPerson: "por persona" };
+
+/* ---------- state ---------- */
+const S = {
+  config: { pricePerHour: 0, mode: "split" },
+  players: [], packages: [], sessions: [], closures: {}, payments: [],
+  got: new Set(), fresh: new Set(),
+  tab: "partidos", week: mondayOf(today()), showInactive: false,
+  noDb: false, stale: false, readOnly: false, pending: false
+};
+let db = null;
+const STREAMS = 6;
+
+const playerById = id => S.players.find(p => p.id === id);
+const playerName = id => (playerById(id)?.name) || "(persona borrada)";
+const activePlayers = () => S.players.filter(p => p.active !== false).sort((a, b) => a.name.localeCompare(b.name, "es"));
+const inactivePlayers = () => S.players.filter(p => p.active === false).sort((a, b) => a.name.localeCompare(b.name, "es"));
+
+/* ---------- money logic ---------- */
+function charges(s) {
+  const entries = Object.entries(s.players || {}).filter(([, h]) => num(h) > 0);
+  const price = num(s.pricePerHour);
+  const out = {};
+  if (s.mode === "perPerson") {
+    for (const [id, h] of entries) out[id] = num(h) * price;
+  } else {
+    const tot = entries.reduce((a, [, h]) => a + num(h), 0);
+    const cost = num(s.courtHours) * price;
+    for (const [id, h] of entries) out[id] = tot ? cost * num(h) / tot : 0;
+  }
+  return out;
+}
+const capOf = s => (s && s.capOn && num(s.capHours) > 0) ? { h: num(s.capHours), amt: num(s.capAmount) } : null;
+const sessionsOn = date => S.sessions.filter(x => x.date === date);
+/* Charges for all games of one day. Whoever reaches the cap hours that day pays the fixed fee for the day,
+   spread across that day's games by hours. Returns amounts per game key and per player. */
+function dayCharges(list) {
+  const hours = {}, base = {};
+  let cap = null;
+  for (const s of list) {
+    const k = s.id || "_new";
+    base[k] = charges(s);
+    if (capOf(s)) cap = capOf(s);
+    for (const [id, h] of Object.entries(s.players || {})) if (num(h) > 0) hours[id] = (hours[id] || 0) + num(h);
+  }
+  const capped = new Set(cap ? Object.keys(hours).filter(id => hours[id] >= cap.h) : []);
+  const out = {};
+  for (const s of list) {
+    const k = s.id || "_new"; out[k] = {};
+    for (const [id, h] of Object.entries(s.players || {})) {
+      if (!(num(h) > 0)) continue;
+      out[k][id] = capped.has(id) ? cap.amt * num(h) / hours[id] : (base[k][id] || 0);
+    }
+  }
+  return { out, hours, capped, cap };
+}
+function sessionAmounts(s) { return dayCharges(sessionsOn(s.date)).out[s.id] || charges(s); }
+function sessionTotal(s) { return Object.values(sessionAmounts(s)).reduce((a, b) => a + b, 0); }
+function weekSessions(ws) {
+  const we = addDays(ws, 6);
+  return S.sessions.filter(s => s.date >= ws && s.date <= we).sort((a, b) => a.date.localeCompare(b.date) || (a.createdAt || "").localeCompare(b.createdAt || ""));
+}
+function weekSummary(ws) {
+  const ss = weekSessions(ws);
+  const per = {};
+  let courtHours = 0, courtCost = 0;
+  const dates = [...new Set(ss.map(s => s.date))];
+  for (const date of dates) {
+    const list = ss.filter(s => s.date === date);
+    const dc = dayCharges(list);
+    for (const s of list) {
+      courtHours += num(s.courtHours);
+      courtCost += num(s.courtHours) * num(s.pricePerHour);
+      const ch = dc.out[s.id] || {};
+      for (const [id, h] of Object.entries(s.players || {})) {
+        if (!(num(h) > 0)) continue;
+        const p = per[id] || (per[id] = { playerId: id, hours: 0, amount: 0, days: [], fixedDays: [] });
+        p.hours += num(h); p.amount += ch[id] || 0;
+        if (!p.days.includes(date)) p.days.push(date);
+        if (dc.capped.has(id) && !p.fixedDays.includes(date)) p.fixedDays.push(date);
+      }
+    }
+  }
+  const lines = Object.values(per).map(p => ({
+    playerId: p.playerId, name: playerName(p.playerId), hours: r2(p.hours), amount: r2(p.amount), days: p.days.sort(), fixedDays: p.fixedDays.sort(), paid: false
+  })).sort((a, b) => a.name.localeCompare(b.name, "es"));
+  const total = r2(lines.reduce((a, l) => a + l.amount, 0));
+  return { sessions: ss, lines, total, courtHours: r2(courtHours), courtCost: r2(courtCost) };
+}
+/* What each player owes, day by day, across all weeks: day charges minus payments for those days. */
+function playerDays() {
+  const byDate = {};
+  for (const x of S.sessions) (byDate[x.date] || (byDate[x.date] = [])).push(x);
+  const out = {};
+  for (const [date, list] of Object.entries(byDate)) {
+    const dc = dayCharges(list);
+    for (const x of list) for (const [id, h] of Object.entries(x.players || {})) {
+      if (!(num(h) > 0)) continue;
+      const m = out[id] || (out[id] = {});
+      const d = m[date] || (m[date] = { date, hours: 0, amount: 0, fixed: false });
+      d.hours += num(h); d.amount += (dc.out[x.id] || {})[id] || 0;
+      if (dc.capped.has(id)) d.fixed = true;
+    }
+  }
+  return out;
+}
+function paidMap() {
+  const m = {};
+  for (const p of S.payments) for (const it of p.items || []) {
+    const pm = m[p.playerId] || (m[p.playerId] = {});
+    const x = pm[it.date] || (pm[it.date] = { amount: 0, hours: 0 });
+    x.amount += num(it.amount); x.hours += num(it.hours);
+  }
+  // Weeks closed with the earlier version kept paid marks on the closure itself.
+  for (const c of Object.values(S.closures)) for (const l of c.lines || []) if (l.paid)
+    for (const d of l.days || []) (m[l.playerId] || (m[l.playerId] = {}))[d] = { amount: Infinity, hours: Infinity };
+  return m;
+}
+function owedAll() {
+  const pd = playerDays(), pm = paidMap(), out = {};
+  for (const [pid, days] of Object.entries(pd)) {
+    const list = [];
+    for (const d of Object.values(days)) {
+      const paid = (pm[pid] || {})[d.date];
+      const amount = r2(d.amount - (paid ? paid.amount : 0));
+      if (amount <= 0.004) continue;
+      const hours = paid ? (r2(d.hours - paid.hours) > 0 ? r2(d.hours - paid.hours) : r2(d.hours)) : r2(d.hours);
+      list.push({ date: d.date, hours, amount, fixed: d.fixed });
+    }
+    if (!list.length) continue;
+    list.sort((a, b) => a.date.localeCompare(b.date));
+    out[pid] = { days: list, hours: r2(list.reduce((a, d) => a + d.hours, 0)), amount: r2(list.reduce((a, d) => a + d.amount, 0)) };
+  }
+  return out;
+}
+function pendingByPlayer() {
+  const o = owedAll(), m = {};
+  for (const [id, v] of Object.entries(o)) m[id] = v.amount;
+  return m;
+}
+function hoursBalance() {
+  const bought = S.packages.reduce((a, p) => a + num(p.hours), 0);
+  const used = S.sessions.reduce((a, s) => a + num(s.courtHours), 0);
+  return { bought: r2(bought), used: r2(used), left: r2(bought - used) };
+}
+/* Packages are used up in order of purchase; also builds a movement history with running balance. */
+function hoursLedger() {
+  const byDate = (a, b) => (a.date || "").localeCompare(b.date || "") || (a.createdAt || "").localeCompare(b.createdAt || "");
+  const pk = [...S.packages].sort(byDate).map(p => ({ ...p, used: 0 }));
+  const ss = [...S.sessions].sort(byDate);
+  let i = 0, over = 0;
+  for (const s of ss) {
+    let h = num(s.courtHours);
+    while (h > 1e-9 && i < pk.length) {
+      const cap = num(pk[i].hours) - pk[i].used;
+      if (cap <= 1e-9) { i++; continue; }
+      const t = Math.min(cap, h); pk[i].used += t; h -= t;
+    }
+    over += h;
+  }
+  const ev = [
+    ...pk.map(p => ({ date: p.date, kind: "pk", delta: num(p.hours), p })),
+    ...ss.map(s => ({ date: s.date, kind: "ss", delta: -num(s.courtHours), s }))
+  ].sort((a, b) => (a.date || "").localeCompare(b.date || "") || (a.kind === b.kind ? 0 : a.kind === "pk" ? -1 : 1));
+  let bal = 0;
+  for (const e of ev) { bal += e.delta; e.bal = r2(bal); }
+  return { packages: pk.reverse(), over: r2(over), events: ev.reverse() };
+}
+
+/* ---------- db ---------- */
+function errText(e) {
+  const c = e && e.code;
+  if (c === "permission-denied") return "La base de datos no dio permiso. Revisa las reglas de Firestore.";
+  if (c === "resource-exhausted") return "Se llegó al límite gratis de Firebase por hoy. Intenta mañana.";
+  if (c === "invalid_argument") return "No se pudo guardar. Revisa que tengas permiso para editar esta página.";
+  if (c === "quota_exceeded") return "La base de datos está llena. Borra partidos o paquetes viejos para seguir.";
+  if (c === "resource_exhausted") return "Demasiados cambios seguidos. Espera unos segundos e intenta de nuevo.";
+  if (c === "revoked" || c === "not_granted" || c === "capability_disabled") return "Ya no hay acceso a los datos desde esta vista.";
+  return "No se pudo conectar. Intenta de nuevo en un momento.";
+}
+async function write(fn, okMsg) {
+  if (!db || S.readOnly) { toast("No se puede guardar desde esta vista."); return false; }
+  try {
+    try { await fn(); }
+    catch (e) { if (e && e.code === "unavailable" && false) { await new Promise(r => setTimeout(r, 500 + Math.random() * 700)); await fn(); } else throw e; }
+    if (okMsg) toast(okMsg);
+    return true;
+  } catch (e) {
+    if (e && (e.code === "invalid_argument" || e.code === "permission-denied")) S.readOnly = true;
+    toast(errText(e));
+    return false;
+  }
+}
+
+/* Anyone with the link can use the page. Visitors get a silent anonymous session so the database
+   only answers to people who opened the page, not to bare requests from the internet. */
+function showProblem(msg) {
+  $("#chips").innerHTML = "";
+  $("nav.tabs").hidden = true;
+  $("#main").innerHTML = `<section class="card" style="margin-top:24px"><h2>No se pudo abrir</h2><div class="banner">${esc(msg)}</div>
+    <button class="btn" id="retry-btn">Reintentar</button></section>`;
+  $("#retry-btn").addEventListener("click", () => location.reload());
+}
+
+async function importSeed() {
+  const ok = await askConfirm("¿Traer los datos de antes?", "Se copian los jugadores, partidos y precios que tenías en la versión de Claude.", "Traer datos");
+  if (!ok) return;
+  await write(async () => {
+    const b = writeBatch(fs);
+    for (const [col, docs] of Object.entries(SEED)) for (const [id, data] of Object.entries(docs)) b.set(fdoc(fs, col, id), data);
+    await b.commit();
+  }, "Datos importados");
+}
+
+async function init() {
+  $("#main").innerHTML = `<div class="loading">Cargando…</div>`;
+  let user = await new Promise(res => { const off = onAuthStateChanged(auth, u => { off(); res(u); }); });
+  if (!user) {
+    try { user = (await signInAnonymously(auth)).user; }
+    catch (e) {
+      if (e && (e.code === "auth/operation-not-allowed" || e.code === "auth/admin-restricted-operation"))
+        return showProblem("Falta activar el acceso anónimo en Firebase (Authentication › Método de acceso › Anónimo).");
+      return showProblem("No hay conexión con la base de datos. Revisa tu internet e intenta de nuevo.");
+    }
+  }
+  $("nav.tabs").hidden = false;
+  db = fsDb;
+  render();
+  const timer = setTimeout(() => { if (S.fresh.size < STREAMS) { S.stale = true; render(); } }, 10000);
+  const mark = (name, meta) => {
+    S.got.add(name);
+    if (!meta || !meta.fromCache) S.fresh.add(name);
+    if (S.fresh.size >= STREAMS) { clearTimeout(timer); S.stale = false; }
+    scheduleRender();
+  };
+  const onErr = name => e => { S.got.add(name); S.fresh.add(name); S.errorMsg = errText(e); if (e && e.code === "permission-denied") S.readOnly = true; if (S.fresh.size >= STREAMS) clearTimeout(timer); scheduleRender(); };
+  const list = (snap) => snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  db.doc("config/main").onSnapshot(snap => {
+    S.config = Object.assign({ pricePerHour: 0, mode: "split" }, snap.exists ? snap.data() : {});
+    mark("config", snap.metadata);
+  }, onErr("config"));
+  db.collection("players").onSnapshot(q => { S.players = list(q); mark("players", q.metadata); }, onErr("players"));
+  db.collection("packages").onSnapshot(q => { S.packages = list(q); mark("packages", q.metadata); }, onErr("packages"));
+  db.collection("sessions").onSnapshot(q => { S.sessions = list(q); mark("sessions", q.metadata); }, onErr("sessions"));
+  db.collection("payments").onSnapshot(q => { S.payments = list(q); mark("payments", q.metadata); }, onErr("payments"));
+  db.collection("closures").onSnapshot(q => {
+    const m = {}; for (const d of q.docs) m[d.id] = { id: d.id, ...d.data() };
+    S.closures = m; mark("closures", q.metadata);
+  }, onErr("closures"));
+}
+
+/* ---------- render ---------- */
+function isTyping() {
+  const a = document.activeElement;
+  return !!(a && a.closest && a.closest("#main") && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName));
+}
+function scheduleRender() { if (isTyping()) { S.pending = true; renderChips(); return; } render(); }
+document.addEventListener("focusout", () => setTimeout(() => { if (S.pending && !isTyping()) { S.pending = false; render(); } }, 0));
+
+function renderChips() {
+  const out = [];
+  const b = hoursBalance();
+  if (S.packages.length) {
+    if (b.left < 0) out.push(`<span class="chip chip-warn">Te pasaste <b class="num">${hrs(-b.left)}</b>: compra otro paquete</span>`);
+    else out.push(`<span class="chip ${b.left <= 2 ? "chip-warn" : ""}">Quedan <b class="num">${hrs(b.left)}</b> del paquete</span>`);
+  }
+  const pend = r2(Object.values(pendingByPlayer()).reduce((a, x) => a + x, 0));
+  if (pend > 0) out.push(`<span class="chip chip-ball">Por cobrar <b class="num">${money(pend)}</b></span>`);
+  if (num(S.config.pricePerHour) > 0) out.push(`<span class="chip">Cancha <b class="num">${money(S.config.pricePerHour)}/h</b></span>`);
+  if (S.config.capOn && num(S.config.capHours) > 0) out.push(`<span class="chip">Desde ${hrs(S.config.capHours)}/día <b class="num">${money(S.config.capAmount)}</b></span>`);
+  $("#chips").innerHTML = out.join("");
+}
+
+function render() {
+  S.pending = false;
+  renderChips();
+  $$("nav.tabs button").forEach(b => b.setAttribute("aria-current", b.dataset.tab === S.tab ? "page" : "false"));
+  const main = $("#main");
+  let banner = "";
+  if (S.noDb) banner = `<div class="banner">No se pudo abrir el almacenamiento. Abre esta página en claude.ai con tu sesión iniciada para guardar los datos.</div>`;
+  else if (S.errorMsg) banner = `<div class="banner">${esc(S.errorMsg)}</div>`;
+  else if (S.stale) banner = `<div class="banner">Todavía no se pudo conectar con los datos. Lo que ves puede estar desactualizado.</div>`;
+  if (!S.noDb && S.got.size < STREAMS) {
+    main.innerHTML = banner + `<div class="loading">Cargando tus datos…</div>`;
+    return;
+  }
+  const v = { partidos: viewGames, cobros: viewCharges, jugadores: viewPlayers, paquetes: viewPackages, ajustes: viewSettings }[S.tab] || viewGames;
+  main.innerHTML = banner + v();
+}
+
+/* ----- shared week bar ----- */
+function weekBar(ws) {
+  const closure = S.closures[ws];
+  const isCurrent = ws === mondayOf(today());
+  return `<section class="weekbar">
+    <button class="iconbtn" data-action="week" data-d="-7" aria-label="Semana anterior">‹</button>
+    <div class="mid">
+      <span class="lbl">${isCurrent ? "Esta semana" : "Semana"}</span>
+      <span class="rng num">${fmtRange(ws)}</span>
+      <span class="${closure ? "pill closed" : "pill open"}">${closure ? "Cerrada" : "Abierta"}</span>
+      ${isCurrent ? "" : `<button class="linkbtn" data-action="week-today">Ir a esta semana</button>`}
+    </div>
+    <button class="iconbtn" data-action="week" data-d="7" aria-label="Semana siguiente">›</button>
+  </section>`;
+}
+
+/* ----- Partidos ----- */
+function viewGames() {
+  const ws = S.week, closure = S.closures[ws];
+  const ss = weekSessions(ws);
+  const parts = [];
+  if (!S.players.length || !(num(S.config.pricePerHour) > 0)) {
+    const priceOk = num(S.config.pricePerHour) > 0, playersOk = S.players.length > 0;
+    parts.push(`<section class="card">
+      <h2>Para empezar</h2>
+      ${!S.players.length && !S.sessions.length ? `<button class="btn ball" data-action="import-seed">Traer los datos de la versión anterior</button>` : ""}
+      <ol class="steps">
+        <li class="${priceOk ? "done" : ""}"><div><b>Pon el precio por hora de la cancha.</b><br><button class="linkbtn" data-action="tab" data-tab="ajustes">Ir a Precio</button></div></li>
+        <li class="${playersOk ? "done" : ""}"><div><b>Agrega a tus amigos</b> (y a ti, si también pagas tu parte).<br><button class="linkbtn" data-action="tab" data-tab="jugadores">Ir a Jugadores</button></div></li>
+        <li><div><b>Registra cada partido</b> con las horas de cada uno. En Cobros ves cuánto debe cada quien y copias su mensaje.</div></li>
+      </ol>
+    </section>`);
+  }
+  parts.push(weekBar(ws));
+  parts.push(closure
+    ? `<div class="hint-box">Esta semana está cerrada y sus partidos ya no se pueden editar. <button class="linkbtn" data-action="reopen-week">Reabrir semana</button></div>`
+    : `<button class="btn ball big-add" data-action="new-session">+ Agregar partido</button>`);
+  const courtH = r2(ss.reduce((a, s) => a + num(s.courtHours), 0));
+  const games = ss.map(s => {
+    const d = fromISO(s.date);
+    const who = Object.entries(s.players || {}).filter(([, h]) => num(h) > 0)
+      .map(([id, h]) => `${esc(playerName(id))} ${hrs(h)}`).join(", ");
+    return `<button type="button" class="game ${closure ? "locked" : ""}" ${closure ? "" : `data-action="edit-session" data-id="${esc(s.id)}"`} aria-label="${closure ? "Partido" : "Editar partido"} del ${fmtDay(s.date)}">
+      <span class="gdate"><span class="wd">${WD[d.getDay()]}</span><span class="dn num">${d.getDate()}</span></span>
+      <span><span class="gplayers">${who || "Sin jugadores"}</span>${s.note ? `<br><span class="gmeta">${esc(s.note)}</span>` : ""}</span>
+      <span class="gamt num">${hrs(s.courtHours)}</span>
+    </button>`;
+  }).join("");
+  parts.push(`<section style="display:grid;gap:10px">
+    <div class="section-h"><h2>Partidos</h2>${ss.length ? `<span class="sub num">${ss.length} ${ss.length === 1 ? "partido" : "partidos"} · ${hrs(courtH)} de cancha</span>` : ""}</div>
+    ${ss.length ? `<div class="games">${games}</div>` : `<div class="empty">${closure ? "Sin partidos." : "Todavía no hay partidos esta semana."}</div>`}
+    ${ss.length && !closure ? `<button class="btn ghost" data-action="close-week">Cerrar semana</button>` : ""}
+  </section>`);
+  return parts.join("");
+}
+
+/* ----- Cobros (general, not tied to a week) ----- */
+function viewCharges() {
+  const owed = owedAll();
+  const ids = Object.keys(owed).sort((a, b) => playerName(a).localeCompare(playerName(b), "es"));
+  const total = r2(ids.reduce((a, id) => a + owed[id].amount, 0));
+  const upToDate = activePlayers().filter(p => !owed[p.id]);
+  const rows = ids.map(id => {
+    const o = owed[id];
+    const open = S.openOwed && S.openOwed[id];
+    const daysShort = o.days.slice(0, 6).map(d => fmtDay(d.date)).join(" · ") + (o.days.length > 6 ? ` · +${o.days.length - 6}` : "");
+    return `<div class="prow">
+      <div><div class="nm">${esc(playerName(id))}</div><div class="days">${daysShort} <button class="linkbtn" data-action="toggle-owed" data-pid="${esc(id)}" style="font-size:13px">${open ? "ocultar" : "ver detalle"}</button></div></div>
+      <div><div class="amt num">${money(o.amount)}</div><div class="hr num">${hrs(o.hours)} · ${o.days.length} ${o.days.length === 1 ? "día" : "días"}</div></div>
+      ${open ? `<div class="breakdown">${o.days.map(d => `<div class="r"><span>${WDL[fromISO(d.date).getDay()]} ${fromISO(d.date).getDate()} ${MO[fromISO(d.date).getMonth()]}${d.fixed ? " · tarifa fija" : ""}</span><span class="num">${hrs(d.hours)} = ${money(d.amount)}</span></div>`).join("")}</div>` : ""}
+      <div class="acts">
+        ${playerById(id)?.phone
+          ? `<a class="btn sm wa" href="${esc(waLink(playerById(id).phone, playerMessage(id)))}" target="_blank" rel="noopener">Enviar por WhatsApp</a>
+             <button class="btn sm ghost" data-action="copy-player" data-pid="${esc(id)}">Copiar</button>`
+          : `<button class="btn sm" data-action="copy-player" data-pid="${esc(id)}">Copiar mensaje</button>
+             <button class="btn sm ghost" data-action="edit-player" data-pid="${esc(id)}">+ Número</button>`}
+        <button class="btn sm ghost" data-action="pay" data-pid="${esc(id)}">Ya pagó</button>
+      </div>
+    </div>`;
+  }).join("");
+  const parts = [`<section class="card">
+    <div class="card-h"><h2>Quién debe</h2>${ids.length ? `<span class="pill warn num">${money(total)}</span>` : `<span class="pill good">Todo cobrado</span>`}</div>
+    ${ids.length ? `<div class="rows">${rows}</div>
+      <div class="totals"><div><b>Total por cobrar</b><div class="k">${ids.length} ${ids.length === 1 ? "persona debe" : "personas deben"}</div></div><div class="big num">${money(total)}</div></div>
+      <button class="btn ghost" data-action="copy-all">Copiar resumen general</button>`
+      : `<div class="empty">Nadie debe nada. Cuando registres partidos, aquí aparece cuánto le toca a cada uno.</div>`}
+    ${upToDate.length && ids.length ? `<p class="note">Al día: ${upToDate.map(p => esc(p.name)).join(", ")}</p>` : ""}
+  </section>`];
+  const pays = [...S.payments].sort((a, b) => (b.paidAt || "").localeCompare(a.paidAt || ""));
+  if (pays.length) {
+    const shown = S.showAllPays ? pays : pays.slice(0, 8);
+    parts.push(`<section class="card">
+      <h2>Pagos recibidos</h2>
+      <div class="list">${shown.map(p => {
+        const its = (p.items || []).slice().sort((a, b) => a.date.localeCompare(b.date));
+        const h = r2(its.reduce((a, i) => a + num(i.hours), 0));
+        const span = its.length ? (its.length === 1 ? fmtDay(its[0].date) : `${fmtDay(its[0].date)} – ${fmtDay(its[its.length - 1].date)}`) : "";
+        return `<div class="li">
+          <div><div class="t">${esc(playerName(p.playerId))} pagó <span class="num">${money(p.amount)}</span></div>
+          <div class="s num">${fmtDate(String(p.paidAt || "").slice(0, 10))} · ${hrs(h)} · ${its.length} ${its.length === 1 ? "día" : "días"} (${span})</div></div>
+          <div class="acts"><button class="btn sm ghost" data-action="undo-pay" data-id="${esc(p.id)}">Deshacer</button></div>
+        </div>`;
+      }).join("")}</div>
+      ${pays.length > 8 ? `<button class="linkbtn" data-action="toggle-pays">${S.showAllPays ? "Ver menos" : `Ver todos (${pays.length})`}</button>` : ""}
+    </section>`);
+  }
+  return parts.join("");
+}
+
+/* ----- Jugadores ----- */
+function viewPlayers() {
+  const pend = pendingByPlayer();
+  const hoursAll = {};
+  for (const s of S.sessions) for (const [id, h] of Object.entries(s.players || {})) hoursAll[id] = (hoursAll[id] || 0) + num(h);
+  const act = activePlayers(), ina = inactivePlayers();
+  const row = (p, inactive) => `<div class="li">
+    <div><div class="t">${esc(p.name)}</div><div class="s num">${p.phone ? fmtPhone(p.phone) + " · " : "Sin número · "}${hrs(hoursAll[p.id] || 0)} jugadas</div></div>
+    <div class="acts">
+      ${pend[p.id] > 0 ? `<span class="pill warn num">Debe ${money(pend[p.id])}</span>` : `<span class="pill good">Al día</span>`}
+      <button class="btn sm ghost" data-action="edit-player" data-pid="${esc(p.id)}">Editar</button>
+      ${inactive
+        ? `<button class="btn sm ghost" data-action="activate-player" data-pid="${esc(p.id)}">Volver a agregar</button>`
+        : `<button class="btn sm danger" data-action="deactivate-player" data-pid="${esc(p.id)}">Quitar</button>`}
+    </div>
+  </div>`;
+  return `<section class="card">
+    <h2>Agregar persona</h2>
+    <form id="add-player-form" class="addp" autocomplete="off">
+      <input class="input" id="new-player-name" name="name" placeholder="Nombre" maxlength="40" aria-label="Nombre de la persona">
+      <input class="input num" id="new-player-phone" type="tel" inputmode="tel" placeholder="WhatsApp" maxlength="20" aria-label="Número de WhatsApp">
+      <button class="btn" type="submit">Agregar</button>
+    </form>
+  </section>
+  <section class="card">
+    <div class="card-h"><h2>Juegan contigo</h2><span class="sub">${act.length} ${act.length === 1 ? "persona" : "personas"}</span></div>
+    ${act.length ? `<div class="list">${act.map(p => row(p, false)).join("")}</div>` : `<div class="empty">Todavía no has agregado a nadie.</div>`}
+  </section>
+  ${ina.length ? `<section class="card">
+    <div class="card-h"><h2>Quitadas</h2><button class="linkbtn" data-action="toggle-inactive">${S.showInactive ? "Ocultar" : `Ver ${ina.length}`}</button></div>
+    <p class="note">Ya no aparecen al registrar partidos, pero su historial y lo que deben se conservan.</p>
+    ${S.showInactive ? `<div class="list">${ina.map(p => row(p, true)).join("")}</div>` : ""}
+  </section>` : ""}`;
+}
+
+/* ----- Horas (paquetes) ----- */
+function viewPackages() {
+  const b = hoursBalance();
+  const L = hoursLedger();
+  const pct = b.bought > 0 ? Math.max(0, Math.min(100, (b.used / b.bought) * 100)) : 0;
+  const shown = S.showAllLedger ? L.events : L.events.slice(0, 12);
+  const ledger = shown.map(e => {
+    const d = fromISO(e.date);
+    if (e.kind === "pk") return `<div class="led">
+      <span class="gdate buy"><span class="wd">${WD[d.getDay()]}</span><span class="dn num">${d.getDate()}</span></span>
+      <div><div class="what">Compraste un paquete</div><div class="who num">${fmtDate(e.date)}${num(e.p.cost) > 0 ? ` · ${money(e.p.cost)}` : ""}</div></div>
+      <div><div class="d plus num">+${hrs(e.delta)}</div><div class="bal num">Saldo ${hrs(e.bal)}</div></div>
+    </div>`;
+    const who = Object.entries(e.s.players || {}).filter(([, h]) => num(h) > 0).map(([id, h]) => `${esc(playerName(id))} ${hrs(h)}`).join(", ");
+    return `<div class="led">
+      <span class="gdate"><span class="wd">${WD[d.getDay()]}</span><span class="dn num">${d.getDate()}</span></span>
+      <div><div class="what">Partido · ${hrs(-e.delta)} de cancha</div><div class="who">${who}</div></div>
+      <div><div class="d num">−${hrs(-e.delta)}</div><div class="bal num" style="${e.bal < 0 ? "color:var(--bad)" : ""}">Saldo ${hrs(e.bal)}</div></div>
+    </div>`;
+  }).join("");
+  return `<section class="card">
+    <h2>Horas del club</h2>
+    <div class="stats">
+      <div class="stat"><span class="k">Compradas</span><span class="v num">${hrs(b.bought)}</span></div>
+      <div class="stat"><span class="k">Usadas</span><span class="v num">${hrs(b.used)}</span></div>
+      <div class="stat"><span class="k">${b.left < 0 ? "Te pasaste" : "Quedan"}</span><span class="v num" style="${b.left < 0 ? "color:var(--bad)" : b.left <= 2 ? "color:var(--warn)" : ""}">${hrs(Math.abs(b.left))}</span></div>
+    </div>
+    <div class="bar" role="img" aria-label="${Math.round(pct)}% de las horas usadas"><span style="width:${pct}%"></span></div>
+    ${b.left < 0 ? `<div class="banner">Jugaron ${hrs(-b.left)} más de las que compraste. Anota el próximo paquete y se descuentan de ahí.</div>` : ""}
+    <p class="note">Las horas usadas son las horas de cancha de cada partido. Se descuentan del paquete más antiguo primero.</p>
+  </section>
+  <section class="card">
+    <h2>Anotar paquete comprado</h2>
+    <form id="add-package-form" autocomplete="off" style="display:grid;gap:12px">
+      <div class="grid3">
+        <div class="field"><label for="pk-date">Fecha</label><input class="input" type="date" id="pk-date" value="${today()}" required></div>
+        <div class="field"><label for="pk-hours">Horas</label><input class="input num" type="number" id="pk-hours" inputmode="decimal" min="0.5" step="0.5" placeholder="10" required></div>
+        <div class="field"><label for="pk-cost">Pagaste ($)</label><input class="input num" type="number" id="pk-cost" inputmode="decimal" min="0" step="0.01" placeholder="150.00"></div>
+      </div>
+      <button class="btn" type="submit">Guardar paquete</button>
+    </form>
+  </section>
+  <section class="card">
+    <h2>Paquetes</h2>
+    ${L.packages.length ? `<div>${L.packages.map(p => {
+      const cph = num(p.hours) > 0 && num(p.cost) > 0 ? num(p.cost) / num(p.hours) : 0;
+      const left = r2(num(p.hours) - p.used);
+      const pp = num(p.hours) > 0 ? Math.min(100, p.used / num(p.hours) * 100) : 0;
+      const st = left <= 0 ? `<span class="pill open">Agotado</span>` : p.used > 0 ? `<span class="pill good">En uso</span>` : `<span class="pill open">Sin usar</span>`;
+      return `<div class="pkg">
+        <div class="top">
+          <div><div style="font-weight:600" class="num">${hrs(p.hours)}${num(p.cost) > 0 ? ` por ${money(p.cost)}` : ""}</div>
+          <div class="sub num">Comprado el ${fmtDate(p.date)}${cph ? ` · ${money(cph)} la hora` : ""}</div></div>
+          ${st}
+        </div>
+        <div class="bar"><span class="${left <= 0 ? "done" : ""}" style="width:${pp}%"></span></div>
+        <div class="card-h"><span class="sub num">Usadas ${hrs(p.used)} · Quedan ${hrs(Math.max(0, left))}</span>
+          <div class="btn-row">
+            ${cph ? `<button class="btn sm ghost" data-action="use-pk-price" data-v="${r2(cph)}">Usar como precio</button>` : ""}
+            <button class="btn sm danger" data-action="delete-package" data-id="${esc(p.id)}">Borrar</button>
+          </div>
+        </div>
+      </div>`;
+    }).join("")}</div>` : `<div class="empty">Sin paquetes anotados.</div>`}
+  </section>
+  <section class="card">
+    <h2>Movimientos</h2>
+    ${L.events.length ? `<div>${ledger}</div>
+      ${L.events.length > 12 ? `<button class="linkbtn" data-action="toggle-ledger">${S.showAllLedger ? "Ver menos" : `Ver todos (${L.events.length})`}</button>` : ""}`
+      : `<div class="empty">Aquí verás cada paquete que compras y cada partido que descuenta horas.</div>`}
+  </section>`;
+}
+
+/* ----- Precio (ajustes) ----- */
+function viewSettings() {
+  const c = S.config;
+  const openWeeks = new Set(S.sessions.map(s => mondayOf(s.date)).filter(w => !S.closures[w]));
+  return `<section class="card">
+    <h2>Precio, tarifas y mensaje</h2>
+    <form id="settings-form" style="display:grid;gap:14px">
+      <div class="field">
+        <label for="cfg-price">Precio por hora ($)</label>
+        <input class="input num" type="number" id="cfg-price" inputmode="decimal" min="0" step="0.01" value="${num(c.pricePerHour) || ""}" placeholder="15.00">
+      </div>
+      <fieldset style="border:0;padding:0;margin:0;display:grid;gap:8px">
+        <legend class="lbl-sm" style="margin-bottom:6px">Cómo se cobra</legend>
+        <label class="radio"><input type="radio" name="mode" value="split" ${c.mode !== "perPerson" ? "checked" : ""}>
+          <span><b>Dividir la cancha</b><span class="s">El costo de las horas de cancha se reparte entre los que jugaron, según cuántas horas jugó cada uno.</span></span></label>
+        <label class="radio"><input type="radio" name="mode" value="perPerson" ${c.mode === "perPerson" ? "checked" : ""}>
+          <span><b>Precio por persona</b><span class="s">Cada persona paga el precio por hora multiplicado por las horas que jugó.</span></span></label>
+      </fieldset>
+      <fieldset style="border:0;padding:0;margin:0;display:grid;gap:10px">
+        <legend class="lbl-sm" style="margin-bottom:6px">Tarifa fija por día</legend>
+        <label class="check"><input type="checkbox" id="cfg-cap" ${c.capOn ? "checked" : ""}> Usar tarifa fija</label>
+        <div class="grid2">
+          <div class="field"><label for="cfg-caph">Desde (horas en el día)</label><input class="input num" type="number" id="cfg-caph" inputmode="decimal" min="0.5" step="0.5" value="${num(c.capHours) || ""}" placeholder="4"></div>
+          <div class="field"><label for="cfg-capa">Tarifa fija ($)</label><input class="input num" type="number" id="cfg-capa" inputmode="decimal" min="0" step="0.01" value="${num(c.capAmount) || ""}" placeholder="50.00"></div>
+        </div>
+        <span class="note">Si una persona juega esas horas o más en un mismo día, ese día paga la tarifa fija en vez de lo que le tocaría por horas.</span>
+      </fieldset>
+      <div class="field">
+        <label for="cfg-greet">Saludo del mensaje de cobro</label>
+        <textarea class="input" id="cfg-greet" rows="2" maxlength="200">${esc(c.msgGreeting ?? DEFAULT_GREETING)}</textarea>
+      </div>
+      ${openWeeks.size ? `<label class="check"><input type="checkbox" id="cfg-apply"> Aplicar también a los partidos de semanas sin cerrar</label>` : ""}
+      <button class="btn" type="submit">Guardar</button>
+    </form>
+    <p class="note">Cada partido guarda el precio y la tarifa fija que había cuando lo registraste, así que cambiarlos aquí no altera semanas cerradas. Para que los partidos ya registrados usen los precios nuevos, marca la casilla de arriba antes de guardar.</p>
+  </section>
+  ${!S.players.length && !S.sessions.length ? `<section class="card"><h2>Datos anteriores</h2>
+    <button class="btn ball" data-action="import-seed">Traer los datos de la versión anterior</button></section>` : ""}`;
+}
+
+/* ---------- sheet / dialogs ---------- */
+let sheetCleanup = null, lastFocus = null;
+function openSheet(html, mount) {
+  lastFocus = document.activeElement;
+  $("#sheet").innerHTML = html;
+  $("#backdrop").hidden = false;
+  document.body.style.overflow = "hidden";
+  sheetCleanup = mount ? mount($("#sheet")) : null;
+  const f = $("#sheet [autofocus]") || $("#sheet input, #sheet button");
+  if (f) setTimeout(() => f.focus(), 30);
+}
+function closeSheet() {
+  $("#backdrop").hidden = true; $("#sheet").innerHTML = ""; document.body.style.overflow = "";
+  if (typeof sheetCleanup === "function") sheetCleanup(); sheetCleanup = null;
+  if (S.pending) render();
+  if (lastFocus && lastFocus.focus && document.contains(lastFocus)) lastFocus.focus();
+}
+$("#backdrop").addEventListener("click", e => { if (e.target.id === "backdrop") closeSheet(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#backdrop").hidden) closeSheet(); });
+
+function askConfirm(title, msg, okLabel, danger) {
+  return new Promise(res => {
+    openSheet(`<h2 id="sheet-title">${esc(title)}</h2><p style="margin:0">${esc(msg)}</p>
+      <div class="btn-row"><button class="btn ghost grow" data-x="no">Cancelar</button><button class="btn ${danger ? "danger" : ""} grow" data-x="yes" style="${danger ? "border-color:var(--bad)" : ""}">${esc(okLabel)}</button></div>`,
+      el => {
+        let done = false;
+        el.addEventListener("click", e => { const b = e.target.closest("[data-x]"); if (!b) return; done = true; const v = b.dataset.x === "yes"; closeSheet(); res(v); });
+        return () => { if (!done) res(false); };
+      });
+  });
+}
+
+let toastT = null;
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.hidden = false;
+  clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 2600);
+}
+
+async function copyText(text, okMsg) {
+  try { await navigator.clipboard.writeText(text); toast(okMsg || "Copiado"); }
+  catch (e) {
+    openSheet(`<h2 id="sheet-title">Copia este texto</h2>
+      <textarea class="input" rows="8" readonly id="copy-area">${esc(text)}</textarea>
+      <button class="btn" data-x="close">Listo</button>`, el => {
+        const ta = $("#copy-area", el); setTimeout(() => { ta.focus(); ta.select(); }, 40);
+        el.addEventListener("click", e => { if (e.target.closest("[data-x]")) closeSheet(); });
+      });
+  }
+}
+
+/* ---------- session form ---------- */
+function openSessionForm(existing) {
+  const isEdit = !!existing;
+  const t = today();
+  const defDate = (t >= S.week && t <= addDays(S.week, 6)) ? t : S.week;
+  const s = existing ? JSON.parse(JSON.stringify(existing)) : { date: defDate, courtHours: 0, players: {}, note: "" };
+  const ids = new Set(activePlayers().map(p => p.id));
+  Object.keys(s.players || {}).forEach(id => ids.add(id));
+  const roster = [...ids].map(id => ({ id, name: playerName(id), inactive: playerById(id)?.active === false }))
+    .sort((a, b) => a.name.localeCompare(b.name, "es"));
+  const maxOf = pl => Object.values(pl || {}).reduce((m, h) => Math.max(m, num(h)), 0);
+  const courtTouched = isEdit && num(s.courtHours) !== maxOf(s.players);
+  const norm = x => x.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+
+  const pickRows = roster.length ? roster.map(p => {
+    const v = num(s.players?.[p.id]);
+    return `<div class="pick ${v > 0 ? "on" : ""}" data-name="${esc(norm(p.name))}">
+      <button type="button" class="pname" data-add="1">${esc(p.name)}${p.inactive ? ' <span class="sub">(quitada)</span>' : ""}</button>
+      <div class="stepper">
+        <button type="button" class="stp" data-step="-0.5" aria-label="Media hora menos a ${esc(p.name)}">−</button>
+        <input class="input num ph" type="number" inputmode="decimal" min="0" step="0.5" data-pid="${esc(p.id)}" value="${v > 0 ? v : ""}" placeholder="0" aria-label="Horas que jugó ${esc(p.name)}">
+        <button type="button" class="stp" data-step="0.5" aria-label="Media hora más a ${esc(p.name)}">+</button>
+      </div>
+    </div>`;
+  }).join("") : `<div class="empty">Primero agrega personas en Jugadores.</div>`;
+
+  openSheet(`<h2 id="sheet-title">${isEdit ? "Editar partido" : "Nuevo partido"}</h2>
+    <form id="session-form" style="display:grid;gap:14px" autocomplete="off">
+      <div class="field"><label for="ss-date">Día</label><input class="input" type="date" id="ss-date" value="${esc(s.date)}" required></div>
+      <div class="field">
+        <span class="lbl-sm">¿Quiénes jugaron y cuántas horas?</span>
+        <div class="selected" id="ss-selected"></div>
+        ${roster.length > 0 ? `<input class="input search" type="search" id="ss-search" placeholder="Buscar jugador…" aria-label="Buscar jugador">` : ""}
+        <div id="ss-list">${pickRows}</div>
+        <div class="empty" id="ss-nomatch" hidden>Nadie con ese nombre. Agrégalo en Jugadores.</div>
+      </div>
+      <div class="field">
+        <label for="ss-hours">Horas de cancha</label>
+        <input class="input num" type="number" inputmode="decimal" min="0" step="0.5" id="ss-hours" value="${num(s.courtHours) || ""}" placeholder="0" data-touched="${courtTouched ? "1" : ""}" style="max-width:160px">
+        <span class="court-auto" id="ss-court-hint"></span>
+      </div>
+      <div class="field"><label for="ss-note">Nota (opcional)</label><input class="input" id="ss-note" maxlength="60" value="${esc(s.note || "")}" placeholder="Cancha 3, dobles…"></div>
+      <div class="err" id="ss-err" role="alert"></div>
+      <div class="btn-row">
+        ${isEdit ? `<button type="button" class="btn danger" id="ss-del">Borrar</button>` : ""}
+        <button type="button" class="btn ghost grow" id="ss-cancel">Cancelar</button>
+        <button type="submit" class="btn grow" id="ss-save">Guardar</button>
+      </div>
+    </form>`, el => {
+      const form = $("#session-form", el);
+      const court = $("#ss-hours", el);
+      const readPlayers = () => {
+        const players = {};
+        $$("input.ph", el).forEach(i => { const h = num(i.value); if (h > 0) players[i.dataset.pid] = h; });
+        return players;
+      };
+      const sync = () => {
+        const pl = readPlayers(), mx = maxOf(pl);
+        if (court.dataset.touched !== "1") court.value = mx > 0 ? mx : "";
+        $$("input.ph", el).forEach(i => i.closest(".pick").classList.toggle("on", num(i.value) > 0));
+        const ids = Object.keys(pl).sort((a, b) => playerName(a).localeCompare(playerName(b), "es"));
+        $("#ss-selected", el).innerHTML = ids.length
+          ? ids.map(id => `<span class="selchip">${esc(playerName(id))} <b class="num">${hrs(pl[id])}</b></span>`).join("")
+          : `<span class="sub">Busca a cada persona y ponle sus horas.</span>`;
+        $("#ss-court-hint", el).innerHTML = court.dataset.touched === "1"
+          ? `Puestas a mano. <button type="button" class="linkbtn" id="ss-auto">Volver a calcularlas</button>`
+          : "Se calculan con quien más jugó y se descuentan del paquete. Cámbialas si fue distinto.";
+      };
+      const filter = () => {
+        const q = norm($("#ss-search", el)?.value.trim() || "");
+        let shown = 0;
+        $$(".pick", el).forEach(r => { const ok = !q || r.dataset.name.includes(q); r.hidden = !ok; if (ok) shown++; });
+        $("#ss-nomatch", el).hidden = shown > 0 || !roster.length;
+      };
+      el.addEventListener("input", e => {
+        if (e.target.id === "ss-search") { filter(); return; }
+        if (e.target === court) court.dataset.touched = "1";
+        sync();
+      });
+      el.addEventListener("keydown", e => {
+        if (e.target.id === "ss-search" && e.key === "Enter") {
+          e.preventDefault();
+          const vis = $$(".pick", el).filter(r => !r.hidden);
+          if (vis.length === 1) { const i = $("input.ph", vis[0]); if (!(num(i.value) > 0)) i.value = 1; sync(); i.focus(); i.select(); }
+        }
+      });
+      el.addEventListener("change", sync);
+      el.addEventListener("click", e => {
+        const st = e.target.closest(".stp");
+        if (st) {
+          const inp = $("input.ph", st.closest(".pick"));
+          inp.value = Math.max(0, r2(num(inp.value) + num(st.dataset.step))) || "";
+          sync(); return;
+        }
+        const nm = e.target.closest("[data-add]");
+        if (nm) { const inp = $("input.ph", nm.closest(".pick")); if (!(num(inp.value) > 0)) { inp.value = 1; sync(); } return; }
+        if (e.target.id === "ss-auto") { court.dataset.touched = ""; sync(); }
+      });
+      $("#ss-cancel", el).addEventListener("click", closeSheet);
+      const del = $("#ss-del", el);
+      if (del) del.addEventListener("click", async () => {
+        const id = existing.id;
+        closeSheet();
+        if (await askConfirm("¿Borrar este partido?", `Se borra el partido del ${fmtDay(existing.date)} y sus horas vuelven al paquete.`, "Borrar", true))
+          await write(() => db.collection("sessions").doc(id).delete(), "Partido borrado");
+      });
+      form.addEventListener("submit", async e => {
+        e.preventDefault();
+        const err = $("#ss-err", el);
+        const date = $("#ss-date", el).value, players = readPlayers(), courtHours = num(court.value);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err.textContent = "Elige el día.";
+        if (!Object.keys(players).length) return err.textContent = "Pon las horas de al menos una persona.";
+        if (!(courtHours > 0)) return err.textContent = "Pon cuántas horas se usó la cancha.";
+        const w = mondayOf(date);
+        if (S.closures[w]) return err.textContent = `La semana del ${fmtRange(w)} está cerrada. Reábrela en Cobros para agregar o cambiar partidos ahí.`;
+        if (isEdit && S.closures[mondayOf(existing.date)]) return err.textContent = "Ese partido es de una semana cerrada.";
+        $("#ss-save", el).disabled = true;
+        // Prices come from Precio: a new game takes the current settings; an edited game keeps the ones it was saved with.
+        const c = S.config;
+        const pricing = isEdit
+          ? { pricePerHour: num(existing.pricePerHour), mode: existing.mode === "perPerson" ? "perPerson" : "split", capOn: !!existing.capOn, capHours: num(existing.capHours), capAmount: num(existing.capAmount) }
+          : { pricePerHour: num(c.pricePerHour), mode: c.mode === "perPerson" ? "perPerson" : "split", capOn: !!c.capOn && num(c.capHours) > 0, capHours: num(c.capHours), capAmount: num(c.capAmount) };
+        const body = { date, courtHours, players, note: $("#ss-note", el).value.trim(), ...pricing,
+          createdAt: existing?.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() };
+        const ok = await write(() => isEdit ? db.collection("sessions").doc(existing.id).set(body) : db.collection("sessions").add(body),
+          isEdit ? "Partido actualizado" : "Partido guardado");
+        if (ok) { S.week = w; closeSheet(); render(); } else $("#ss-save", el).disabled = false;
+      });
+      sync();
+    });
+}
+
+/* ---------- messages ---------- */
+const DEFAULT_GREETING = "Buenas buenas ☀️ por acá le dejo el cierre de semana 🎾 💵";
+const hrsTxt = h => r2(h) + "hrs";
+const moneyTxt = n => { const v = r2(n); return "$" + (Number.isInteger(v) ? v : v.toFixed(2)); };
+function playerMessage(pid) {
+  const o = owedAll()[pid]; if (!o) return "";
+  const multiMonth = new Set(o.days.map(d => d.date.slice(0, 7))).size > 1;
+  const greet = String(S.config.msgGreeting ?? DEFAULT_GREETING).trim();
+  const blocks = o.days.map(d => {
+    const x = fromISO(d.date);
+    return `${WDL[x.getDay()]} ${x.getDate()}${multiMonth ? ` de ${MOL[x.getMonth()]}` : ""}\n${hrsTxt(d.hours)} = ${moneyTxt(d.amount)}${d.fixed ? " (tarifa fija)" : ""}`;
+  });
+  return `${greet ? greet + "\n\n\n" : ""}${blocks.join("\n\n")}\n\nTotal: (${hrsTxt(o.hours)}) = *${moneyTxt(o.amount)}*`;
+}
+function allMessage() {
+  const owed = owedAll();
+  const ids = Object.keys(owed).sort((a, b) => playerName(a).localeCompare(playerName(b), "es"));
+  const total = ids.reduce((a, id) => a + owed[id].amount, 0);
+  return ["Pendientes de tenis 🎾", "", ...ids.map(id => `${playerName(id)}: ${hrsTxt(owed[id].hours)} = ${moneyTxt(owed[id].amount)}`), "", `Total: *${moneyTxt(total)}*`].join("\n");
+}
+function openPaySheet(pid) {
+  const o = owedAll()[pid]; if (!o) return;
+  const name = playerName(pid);
+  openSheet(`<h2 id="sheet-title">Pago de ${esc(name)}</h2>
+    <p class="note" style="margin:0">Marca los días que pagó.</p>
+    <div id="pay-days">${o.days.map((d, i) => `<label class="check payday"><input type="checkbox" data-i="${i}" checked>
+      <span style="flex:1">${WDL[fromISO(d.date).getDay()]} ${fromISO(d.date).getDate()} ${MO[fromISO(d.date).getMonth()]} · ${hrs(d.hours)}</span><b class="num">${money(d.amount)}</b></label>`).join("")}</div>
+    <div class="totals"><div><b>Pagó</b></div><div class="big num" id="pay-total">${money(o.amount)}</div></div>
+    <div class="btn-row"><button class="btn ghost grow" data-x="no">Cancelar</button><button class="btn grow" data-x="yes" id="pay-ok">Registrar pago</button></div>`, el => {
+      const pick = () => $$("#pay-days input", el).filter(c => c.checked).map(c => o.days[Number(c.dataset.i)]);
+      el.addEventListener("change", () => {
+        const sel = pick();
+        $("#pay-total", el).textContent = money(sel.reduce((a, d) => a + d.amount, 0));
+        $("#pay-ok", el).disabled = !sel.length;
+      });
+      el.addEventListener("click", async e => {
+        const b = e.target.closest("[data-x]"); if (!b) return;
+        if (b.dataset.x === "no") return closeSheet();
+        const sel = pick(); if (!sel.length) return;
+        b.disabled = true;
+        const items = sel.map(d => ({ date: d.date, hours: r2(d.hours), amount: r2(d.amount) }));
+        const amount = r2(items.reduce((a, i) => a + i.amount, 0));
+        const ok = await write(() => db.collection("payments").add({ playerId: pid, items, amount, paidAt: new Date().toISOString() }), `Pago de ${name} registrado`);
+        if (ok) closeSheet(); else b.disabled = false;
+      });
+    });
+}
+
+/* ---------- actions ---------- */
+document.addEventListener("click", async e => {
+  const b = e.target.closest("[data-action]");
+  if (!b || b.closest("#sheet")) return;
+  const a = b.dataset.action;
+  if (a === "tab") { S.tab = b.dataset.tab; render(); window.scrollTo(0, 0); return; }
+  if (a === "week") { S.week = addDays(S.week, Number(b.dataset.d)); render(); return; }
+  if (a === "week-today") { S.week = mondayOf(today()); render(); return; }
+  if (a === "goto-week") { S.week = b.dataset.ws; render(); window.scrollTo(0, 0); return; }
+  if (a === "new-session") { if (!S.players.length) { toast("Primero agrega personas en Jugadores."); S.tab = "jugadores"; render(); return; } openSessionForm(null); return; }
+  if (a === "edit-session") { const s = S.sessions.find(x => x.id === b.dataset.id); if (s) openSessionForm(s); return; }
+  if (a === "copy-player") { copyText(playerMessage(b.dataset.pid), "Mensaje copiado"); return; }
+  if (a === "copy-all") { copyText(allMessage(), "Resumen copiado"); return; }
+  if (a === "pay") { openPaySheet(b.dataset.pid); return; }
+  if (a === "toggle-owed") { S.openOwed = S.openOwed || {}; S.openOwed[b.dataset.pid] = !S.openOwed[b.dataset.pid]; render(); return; }
+  if (a === "toggle-pays") { S.showAllPays = !S.showAllPays; render(); return; }
+  if (a === "undo-pay") {
+    const p = S.payments.find(x => x.id === b.dataset.id); if (!p) return;
+    if (!await askConfirm("¿Deshacer este pago?", `${playerName(p.playerId)} vuelve a deber ${money(p.amount)}.`, "Deshacer", true)) return;
+    await write(() => db.collection("payments").doc(p.id).delete(), "Pago deshecho");
+    return;
+  }
+  if (a === "close-week") {
+    const ws = S.week;
+    if (!weekSessions(ws).length) return;
+    if (!await askConfirm("¿Cerrar la semana?", `Los partidos del ${fmtRange(ws)} ya no se podrán editar. Lo que debe cada uno sigue en Cobros.`, "Cerrar semana")) return;
+    await write(() => db.collection("closures").doc(ws).set({ weekStart: ws, closedAt: new Date().toISOString() }), "Semana cerrada");
+    return;
+  }
+  if (a === "reopen-week") {
+    const ws = S.week;
+    if (!await askConfirm("¿Reabrir la semana?", "Podrás agregar y editar sus partidos otra vez.", "Reabrir")) return;
+    await write(() => db.collection("closures").doc(ws).delete(), "Semana reabierta");
+    return;
+  }
+  if (a === "import-seed") { importSeed(); return; }
+  if (a === "toggle-inactive") { S.showInactive = !S.showInactive; render(); return; }
+  if (a === "toggle-ledger") { S.showAllLedger = !S.showAllLedger; render(); return; }
+  if (a === "deactivate-player") {
+    const p = playerById(b.dataset.pid); if (!p) return;
+    if (!await askConfirm(`¿Quitar a ${p.name}?`, "Ya no aparecerá al registrar partidos. Su historial y lo que debe se conservan, y puedes volver a agregarlo cuando quieras.", "Quitar", true)) return;
+    await write(() => db.collection("players").doc(p.id).update({ active: false }), `${p.name} quitado`);
+    return;
+  }
+  if (a === "activate-player") {
+    const p = playerById(b.dataset.pid); if (!p) return;
+    await write(() => db.collection("players").doc(p.id).update({ active: true }), `${p.name} está de vuelta`);
+    return;
+  }
+  if (a === "edit-player") {
+    const p = playerById(b.dataset.pid); if (!p) return;
+    openSheet(`<h2 id="sheet-title">Editar a ${esc(p.name)}</h2>
+      <form id="rn-form" style="display:grid;gap:12px">
+        <div class="field"><label for="rn-name">Nombre</label><input class="input" id="rn-name" maxlength="40" value="${esc(p.name)}"></div>
+        <div class="field"><label for="rn-phone">WhatsApp</label><input class="input num" id="rn-phone" type="tel" inputmode="tel" maxlength="20" value="${esc(p.phone ? fmtPhone(p.phone) : "")}" placeholder="7123 4567" ${p.phone ? "" : "autofocus"}>
+          <span class="note">Si es de otro país, ponlo con su código, por ejemplo +1 305 555 1234.</span></div>
+        <div class="err" id="rn-err" role="alert"></div>
+        <div class="btn-row"><button type="button" class="btn ghost grow" id="rn-cancel">Cancelar</button><button class="btn grow" type="submit">Guardar</button></div>
+      </form>`, el => {
+        $("#rn-cancel", el).addEventListener("click", closeSheet);
+        $("#rn-form", el).addEventListener("submit", async ev => {
+          ev.preventDefault();
+          const name = $("#rn-name", el).value.trim().replace(/\s+/g, " ");
+          const phone = normPhone($("#rn-phone", el).value);
+          if (!name) return $("#rn-err", el).textContent = "Escribe un nombre.";
+          if (S.players.some(x => x.id !== p.id && x.name.toLowerCase() === name.toLowerCase())) return $("#rn-err", el).textContent = "Ya hay alguien con ese nombre.";
+          if (!phoneOk(phone)) return $("#rn-err", el).textContent = "Revisa el número: pon 8 dígitos, o el número con código de país.";
+          if (await write(() => db.collection("players").doc(p.id).update({ name, phone }), "Datos guardados")) closeSheet();
+        });
+      });
+    return;
+  }
+  if (a === "use-pk-price") {
+    const v = num(b.dataset.v);
+    await write(() => db.doc("config/main").set({ ...S.config, pricePerHour: v }), `Precio actualizado a ${money(v)}/h`);
+    return;
+  }
+  if (a === "delete-package") {
+    const p = S.packages.find(x => x.id === b.dataset.id); if (!p) return;
+    if (!await askConfirm("¿Borrar este paquete?", `${hrs(p.hours)} del ${fmtDate(p.date)}.`, "Borrar", true)) return;
+    await write(() => db.collection("packages").doc(p.id).delete(), "Paquete borrado");
+    return;
+  }
+});
+document.addEventListener("keydown", e => {
+  if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches(".game[data-action]")) { e.preventDefault(); e.target.click(); }
+});
+
+document.addEventListener("submit", async e => {
+  const f = e.target;
+  if (f.id === "add-player-form") {
+    e.preventDefault();
+    const inp = $("#new-player-name"), ph = $("#new-player-phone");
+    const name = inp.value.trim().replace(/\s+/g, " ");
+    const phone = normPhone(ph.value);
+    if (!name) { inp.focus(); return; }
+    if (!phoneOk(phone)) { toast("Revisa el número: pon 8 dígitos, o el número con código de país."); ph.focus(); return; }
+    const dup = S.players.find(x => x.name.toLowerCase() === name.toLowerCase());
+    if (dup) {
+      if (dup.active === false) { await write(() => db.collection("players").doc(dup.id).update({ active: true }), `${dup.name} está de vuelta`); inp.value = ""; render(); }
+      else toast(`${dup.name} ya está en la lista.`);
+      return;
+    }
+    if (await write(() => db.collection("players").add({ name, phone, active: true, createdAt: new Date().toISOString() }), `${name} agregado`)) {
+      inp.value = ""; ph.value = ""; render(); const n = $("#new-player-name"); if (n) n.focus();
+    }
+  }
+  if (f.id === "add-package-form") {
+    e.preventDefault();
+    const date = $("#pk-date").value, hours = num($("#pk-hours").value), cost = num($("#pk-cost").value);
+    if (!date || !(hours > 0)) { toast("Pon la fecha y cuántas horas compraste."); return; }
+    if (await write(() => db.collection("packages").add({ date, hours, cost, createdAt: new Date().toISOString() }), "Paquete guardado")) {
+      document.activeElement && document.activeElement.blur && document.activeElement.blur(); render();
+    }
+  }
+  if (f.id === "settings-form") {
+    e.preventDefault();
+    const price = num($("#cfg-price").value);
+    const mode = (f.querySelector('input[name="mode"]:checked') || {}).value === "perPerson" ? "perPerson" : "split";
+    const apply = $("#cfg-apply") && $("#cfg-apply").checked;
+    const capHours = num($("#cfg-caph").value), capAmount = num($("#cfg-capa").value);
+    const capOn = $("#cfg-cap").checked;
+    if (price < 0 || capAmount < 0) { toast("Los precios no pueden ser negativos."); return; }
+    if (capOn && !(capHours > 0)) { toast("Pon desde cuántas horas aplica la tarifa fija."); return; }
+    const ok = await write(() => db.doc("config/main").set({ pricePerHour: price, mode, capOn, capHours, capAmount, msgGreeting: $("#cfg-greet").value.trim() }), "Precios guardados");
+    if (ok && apply) {
+      const same = s => num(s.pricePerHour) === price && s.mode === mode && !!s.capOn === capOn && (!capOn || (num(s.capHours) === capHours && num(s.capAmount) === capAmount));
+      const targets = S.sessions.filter(s => !S.closures[mondayOf(s.date)] && !same(s));
+      for (const s of targets) {
+        const { id, ...rest } = s;
+        const good = await write(() => db.collection("sessions").doc(id).set({ ...rest, pricePerHour: price, mode, capOn, capHours, capAmount, updatedAt: new Date().toISOString() }));
+        if (!good) break;
+      }
+      if (targets.length) toast(`Precio aplicado a ${targets.length} ${targets.length === 1 ? "partido" : "partidos"}`);
+    }
+    document.activeElement && document.activeElement.blur && document.activeElement.blur();
+    render();
+  }
+});
+
+init();
+</script>
+</body>
+</html>
